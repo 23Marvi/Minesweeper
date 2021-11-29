@@ -25,24 +25,36 @@ namespace Minesweeper {
         /// </summary>
         private void InitializeComponent() {
             this.FParent = new System.Windows.Forms.Panel();
+            this.SettingsMenu = new Minesweeper.SettingsMenu();
             this.SuspendLayout();
             // 
             // FParent
             // 
-            this.FParent.Location = new System.Drawing.Point(438, 12);
+            this.FParent.Location = new System.Drawing.Point(0, 0);
+            this.FParent.Margin = new System.Windows.Forms.Padding(1);
             this.FParent.Name = "FParent";
-            this.FParent.Size = new System.Drawing.Size(200, 100);
+            this.FParent.Size = new System.Drawing.Size(483, 396);
             this.FParent.TabIndex = 0;
+            // 
+            // SettingsMenu
+            // 
+            this.SettingsMenu.BackColor = System.Drawing.SystemColors.Control;
+            this.SettingsMenu.Location = new System.Drawing.Point(643, 12);
+            this.SettingsMenu.Name = "SettingsMenu";
+            this.SettingsMenu.Size = new System.Drawing.Size(420, 600);
+            this.SettingsMenu.TabIndex = 1;
+            this.SettingsMenu.Visible = false;
             // 
             // Form1
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(24F, 46F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(50)))), ((int)(((byte)(80)))), ((int)(((byte)(80)))));
-            this.ClientSize = new System.Drawing.Size(1400, 1400);
+            this.ClientSize = new System.Drawing.Size(1075, 882);
+            this.Controls.Add(this.SettingsMenu);
             this.Controls.Add(this.FParent);
-            this.Font = new System.Drawing.Font("Microsoft Sans Serif", 30F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.Margin = new System.Windows.Forms.Padding(14, 12, 14, 12);
+            this.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F);
+            this.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.Name = "Form1";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Form1";
@@ -56,6 +68,7 @@ namespace Minesweeper {
         #endregion
 
         private System.Windows.Forms.Panel FParent;
+        private SettingsMenu SettingsMenu;
     }
 }
 

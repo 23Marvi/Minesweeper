@@ -9,6 +9,12 @@ namespace Minesweeper {
         FCell,
         Flag,
     }
+    public enum Difficulty { 
+        Easy,
+        Medium,
+        Hard,
+        Extreme
+    }
 
     internal class Field {
         public Field(Control Parent) {
@@ -32,20 +38,21 @@ namespace Minesweeper {
                 int X = Cell.Left / Cell.Width;
                 int Y = Cell.Top / Cell.Height;
 
-                if (!Started) { SetMines(new Point(X, Y)); Started = true; }
+                if (!Playing) { SetMines(new Point(X, Y)); Playing = true; }
 
                 if (Cell.Name == CellType.Mine.ToString()) {
+                    Playing = false;
                     DialogResult DR = MessageBox.Show("Would you like to try again?",
-                                    "You Lost!",
+                                    "You lost!",
                                     MessageBoxButtons.YesNo);
 
                     if (DR == DialogResult.Yes) Create(Size.Width, Size.Height);
                     else foreach (Label C in Cells) C.Enabled = false;
                 }
-                else FloodReveal(X, Y);
-
-                if (Won()) MessageBox.Show("YOU WON");
-                
+                else {
+                    FloodReveal(X, Y);
+                    Won();
+                }
             }
         }
 
@@ -59,31 +66,23 @@ namespace Minesweeper {
             }
         }
         #endregion
-
-        private Control Parent;
-        private Cell[,] Cells;
-
-        private bool Started;
-
-        private int Mines;
-        private Size Size;
-
-        public Color FCellC = Color.LightGray;
-        public Color CellC = Color.Gray;
-        public Color MineC = Color.Red;
-        
-        /// <summary>
-        /// Creates the field
-        /// </summary>
-        /// Create a new field with given size
-        internal void Create(int X = 9, int Y = 9) {
+        #region Constructors
+        internal void Create(int Mines = 0, int X = 9, int Y = 9) {
             #region Initialize
-            Parent.Controls.Clear();
-            
+            if (Playing) {
+                DialogResult DR = MessageBox.Show("You will lose all progress in this game!",
+                                              "You've already started a game!",
+                                               MessageBoxButtons.YesNo);
+                if (DR == DialogResult.No) return;
+            }
+            if (Mines > X * Y - 9) { // Prevention of making more mines than cells
+                MessageBox.Show("So we did some magic and decided for you :)", "You tried to place too many mines!");
+                this.Mines = X * Y / 8;
+            } else this.Mines = Mines;
 
-            this.Started = false;
-            this.Size = new Size(X, Y);
-            this.Mines = X * Y / 9;
+            Parent.Controls.Clear();
+            Size = new Size(X, Y);
+            Playing = false;
 
             Cells = new Cell[X, Y];
             #endregion
@@ -104,12 +103,35 @@ namespace Minesweeper {
                 }
             }
         }
+        internal void Create(Difficulty D) {
+            if (D == Difficulty.Easy) Create(10, 9, 9);
+            if (D == Difficulty.Medium) Create(40, 16, 16);
+            if (D == Difficulty.Hard) Create(99, 30, 24);
+            if (D == Difficulty.Extreme) Create(180, 29, 30);
+        }
+        #endregion
 
+        private Control Parent;
+        private Cell[,] Cells;
+
+        private bool Playing;
+
+        private int Mines;
+        private Size Size;
+
+        public Color FCellC = Color.LightGray;
+        public Color CellC = Color.Gray;
+        private Color MineC = Color.Red;
+
+        
+        /// <summary>
+        /// Resizes the field
+        /// </summary>
         internal void Resize() {
             for (int y = 0; y < Size.Height; y++) {
                 for (int x = 0; x < Size.Width; x++) {
-                    Cells[x, y] = new Cell();
                     Cells[x, y].Size = new Size(Parent.ClientSize.Width / Size.Width, Parent.ClientSize.Height / Size.Height);
+                    Cells[x, y].Font = new Font("Arial", (int)Math.Ceiling((decimal)Cells[x, y].Width / 2));
                     Cells[x, y].Location = new Point(x * Cells[x, y].Width, y * Cells[x, y].Height);
                 }
             }
@@ -196,7 +218,8 @@ namespace Minesweeper {
         /// </summary>
         /// Search for as long the amount of mines found does not
         /// exceed mines placed
-        /// 
+        /// If won, disable the field
+        /// Show Messagebox asking to play again
         private bool Won() {
             int MCount = 0;
             foreach (Label Cell in Cells) {
@@ -205,7 +228,14 @@ namespace Minesweeper {
                     else if (Cell.Name == CellType.Cell.ToString()) return false;
                 } else return false;
             }
+            foreach (Label C in Cells) C.Enabled = false;
+            Playing = false;
+            DialogResult DR = MessageBox.Show("Would you like to try again?",
+                                    "You won!",
+                                    MessageBoxButtons.YesNo);
 
+            if (DR == DialogResult.Yes) Create(Size.Width, Size.Height);
+            else foreach (Label C in Cells) C.Enabled = false;
             return true;
         }
     }
