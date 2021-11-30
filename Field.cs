@@ -16,10 +16,7 @@ namespace Minesweeper {
         Extreme
     }
 
-    internal class Field{
-        public Field(Control Parent) {
-            this.CParent = Parent;
-        }
+    internal class Field : Panel{
         #region Static
         private static Random RND = new Random();
         #endregion
@@ -80,18 +77,16 @@ namespace Minesweeper {
                 this.Mines = X * Y / 8;
             } else this.Mines = Mines;
 
-            CParent.Controls.Clear();
+            Controls.Clear();
             FSize = new Size(X, Y);
             Playing = false;
 
             Cells = new Cell[X, Y];
             #endregion
-            int Z = Math.Max(X, Y);
-
+            int Z = Math.Min(Parent.ClientSize.Width / X, Parent.ClientSize.Height / Y);
             for (int y = 0; y < Y; y++) {
                 for (int x = 0; x < X; x++) {
                     Cells[x, y] = new Cell();
-                    Cells[x, y].Size = new Size(CParent.ClientSize.Width / Z, CParent.ClientSize.Height / Z);
                     Cells[x, y].Location = new Point(x * Cells[x, y].Width, y * Cells[x, y].Height);
                     Cells[x, y].Font = new Font("Arial", Cells[x, y].Width / 2);
                     Cells[x, y].BorderStyle = BorderStyle.FixedSingle;
@@ -100,20 +95,21 @@ namespace Minesweeper {
                     Cells[x, y].Name = CellType.Cell.ToString();
                     Cells[x, y].Click += Cell_Click;
                     Cells[x, y].MouseDown += Cell_MouseDown;
-                    CParent.Controls.Add(Cells[x, y]);
+                    Controls.Add(Cells[x, y]);
                 }
             }
+
+            Resize();
         }
         internal void Create(Difficulty D) {
             if (D == Difficulty.Easy) Create(10, 9, 9);
-            if (D == Difficulty.Medium) Create(40, 16, 16);
-            if (D == Difficulty.Hard) Create(99, 30, 16);
-            if (D == Difficulty.Extreme) Create(180, 30, 24);
+            else if (D == Difficulty.Medium) Create(40, 16, 16);
+            else if (D == Difficulty.Hard) Create(99, 30, 16);
+            else if (D == Difficulty.Extreme) Create(180, 30, 24);
         }
         #endregion
 
-        private Control CParent;
-        private Cell[,] Cells;
+        public Cell[,] Cells;
 
         private bool Playing;
 
@@ -124,18 +120,31 @@ namespace Minesweeper {
         public Color CellC = Color.Gray;
         private Color MineC = Color.Red;
 
-        
         /// <summary>
-        /// Resizes the field
+        /// Resizes the cells 
+        /// Then fits the Panel around it
         /// </summary>
-        internal void FResize() {
+        internal new void Resize() {
+            int Z = Math.Min(Parent.ClientSize.Width / FSize.Width, Parent.ClientSize.Height / FSize.Height);
+            int FontSize = 1;
+
             for (int y = 0; y < FSize.Height; y++) {
                 for (int x = 0; x < FSize.Width; x++) {
-                    Cells[x, y].Size = new Size(CParent.ClientSize.Width / FSize.Width, CParent.ClientSize.Height / FSize.Height);
-                    Cells[x, y].Font = new Font("Arial", (int)Math.Ceiling((decimal)Cells[x, y].Width / 2));
+                    Cells[x, y].Size = new Size(Z, Z);
+
+                    if (x == 0) {
+                        FontSize = (int)Math.Ceiling((decimal)Cells[0, 0].Width / 2);
+                        if (FontSize == 0) FontSize = 1;
+                    }
+
                     Cells[x, y].Location = new Point(x * Cells[x, y].Width, y * Cells[x, y].Height);
+                    Cells[x, y].Font = new Font("Arial", FontSize);
                 }
             }
+
+            Size = new Size(FSize.Width * Z + 10, FSize.Height * Z + 10);
+            Location = new Point((Parent.ClientSize.Width - Width) / 2,
+                                 (Parent.ClientSize.Height - Height) / 2);
         }
 
         /// <summary>

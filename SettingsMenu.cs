@@ -5,7 +5,7 @@ namespace Minesweeper {
     public partial class SettingsMenu : UserControl {
         public SettingsMenu() {
             InitializeComponent();
-            SLabel = Easy;
+            SLabel = Label = Easy;
         }
 
         public string Difficulty = "Easy";
@@ -33,6 +33,7 @@ namespace Minesweeper {
         private void Accept_Click(object sender, EventArgs e) {
             SDifficulty = Difficulty;
             SLabel = Label;
+
 
             Visible = false;
 

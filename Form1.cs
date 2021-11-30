@@ -14,7 +14,7 @@ namespace Minesweeper {
             InitializeComponent();
         }
 
-        Field Field;
+        Field Field = new Field();
 
         private void Form1_Load(object sender, EventArgs e) {
             #region StartMessage
@@ -28,11 +28,7 @@ namespace Minesweeper {
             MessageBox.Show(SB.ToString(), "Welcome to Minesweeper!");
             #endregion
 
-            int MaxSize = Math.Min(ClientSize.Width, ClientSize.Height);
-            FParent.Size = new Size(MaxSize, MaxSize);
-            FParent.Left = (ClientSize.Width - FParent.Width) / 2;
-            
-            Field = new Field(FParent);
+            Controls.Add(Field);
             CreateField();
         }
 
@@ -48,11 +44,7 @@ namespace Minesweeper {
         /// Resize the Field once the form has ended resizing
         /// </summary>
         private void Form1_ResizeEnd(object sender, EventArgs e) {
-            int MaxSize = Math.Min(ClientSize.Width, ClientSize.Height);
-            FParent.Size = new Size(MaxSize, MaxSize);
-            FParent.Left = (ClientSize.Width - FParent.Width) / 2;
-            FParent.Top = (ClientSize.Height - FParent.Height) / 2;
-            Field.FResize();
+            Field.Resize();
         }
 
         /// <summary>

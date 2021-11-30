@@ -24,17 +24,8 @@ namespace Minesweeper {
         /// the contents of this method with the code editor.
         /// </summary>
         private void InitializeComponent() {
-            this.FParent = new System.Windows.Forms.Panel();
             this.SettingsMenu = new Minesweeper.SettingsMenu();
             this.SuspendLayout();
-            // 
-            // FParent
-            // 
-            this.FParent.Location = new System.Drawing.Point(0, 0);
-            this.FParent.Margin = new System.Windows.Forms.Padding(1);
-            this.FParent.Name = "FParent";
-            this.FParent.Size = new System.Drawing.Size(483, 396);
-            this.FParent.TabIndex = 0;
             // 
             // SettingsMenu
             // 
@@ -52,8 +43,8 @@ namespace Minesweeper {
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(50)))), ((int)(((byte)(80)))), ((int)(((byte)(80)))));
             this.ClientSize = new System.Drawing.Size(1075, 882);
             this.Controls.Add(this.SettingsMenu);
-            this.Controls.Add(this.FParent);
             this.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F);
+            this.KeyPreview = true;
             this.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.Name = "Form1";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
@@ -62,13 +53,11 @@ namespace Minesweeper {
             this.Load += new System.EventHandler(this.Form1_Load);
             this.ResizeEnd += new System.EventHandler(this.Form1_ResizeEnd);
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Form1_KeyDown);
-            this.PreviewKeyDown += new System.Windows.Forms.PreviewKeyDownEventHandler(this.Form1_PreviewKeyDown);
             this.ResumeLayout(false);
 
         }
         #endregion
         private SettingsMenu SettingsMenu;
-        private System.Windows.Forms.Panel FParent;
     }
 }
 
