@@ -55,12 +55,6 @@ namespace Minesweeper {
 
             foreach (Label L in BParent.Controls) L.Enabled = true;
             SLabel.Enabled = false;
-
-            if (Visible == true) {
-                Form1 F = (Form1)Parent;
-                Left = (F.ClientSize.Width - Width) / 2;
-                Top = (F.ClientSize.Height - Height) / 2;
-            }
         }
-    }
+    } 
 }

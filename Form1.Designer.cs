@@ -61,14 +61,14 @@ namespace Minesweeper {
             this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
             this.Load += new System.EventHandler(this.Form1_Load);
             this.ResizeEnd += new System.EventHandler(this.Form1_ResizeEnd);
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Form1_KeyDown);
             this.PreviewKeyDown += new System.Windows.Forms.PreviewKeyDownEventHandler(this.Form1_PreviewKeyDown);
             this.ResumeLayout(false);
 
         }
         #endregion
-
-        private System.Windows.Forms.Panel FParent;
         private SettingsMenu SettingsMenu;
+        private System.Windows.Forms.Panel FParent;
     }
 }
 
