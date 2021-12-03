@@ -116,9 +116,9 @@ namespace Minesweeper {
         private int Mines;
         private Size FSize;
 
-        public Color FCellC = Color.LightGray;
+        public Color FCellC = Color.DarkGray;
         public Color CellC = Color.Gray;
-        private Color MineC = Color.Red;
+        private Color MineC = Color.IndianRed;
 
         /// <summary>
         /// Resizes the cells 
@@ -188,6 +188,25 @@ namespace Minesweeper {
                     catch (Exception) { }
                 }
             }
+
+            SetColors();
+        }
+
+        Color[] clrs = new Color[] {
+            Color.Blue,
+            Color.Green,
+            Color.Red,
+            Color.DarkBlue,
+            Color.Brown,
+            Color.DarkCyan,
+            Color.Black,
+            Color.DarkSlateGray
+        };
+
+        private void SetColors() {
+            foreach (Cell C in Cells) {
+                if (C.MineCount != 0) C.ForeColor = clrs[C.MineCount - 1];
+            }
         }
 
         /// <summary>
@@ -201,6 +220,7 @@ namespace Minesweeper {
         private void FloodReveal(int x, int y) {
             if ((x < 0) || (x >= FSize.Width)) return;
             else if ((y < 0) || (y >= FSize.Height)) return;
+
             else if (Cells[x, y].Name == CellType.Cell.ToString() && Cells[x, y].BackColor != MineC) {
                 Cells[x, y].BackColor = FCellC;
                 Cells[x, y].BorderStyle = BorderStyle.None;
