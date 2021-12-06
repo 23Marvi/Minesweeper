@@ -21,6 +21,8 @@ namespace Minesweeper {
             StringBuilder SB = new StringBuilder();
             SB.Append("Press 'H' for a explanation on how Minesweeper works.");
             SB.AppendLine();
+            SB.Append("Press 'P' to pause current game.");
+            SB.AppendLine();
             SB.Append("Press 'R' to start a new game with same difficulty");
             SB.AppendLine();
             SB.Append("Press 'Esc' to choose a different difficulty.");
@@ -75,6 +77,7 @@ namespace Minesweeper {
                 SB.AppendLine("Good luck!");
                 MessageBox.Show(SB.ToString(), "How does Minesweeper work?");
             }
+            if (e.KeyCode == Keys.P) Field.Pause();
         }
     }
 }

@@ -9,14 +9,14 @@ namespace Minesweeper {
         FCell,
         Flag,
     }
-    public enum Difficulty { 
+    public enum Difficulty {
         Easy,
         Medium,
         Hard,
         Extreme
     }
 
-    internal class Field : Panel{
+    internal class Field : Panel {
         #region Static
         private static Random RND = new Random();
         #endregion
@@ -38,13 +38,12 @@ namespace Minesweeper {
                 if (!Playing) { SetMines(new Point(X, Y)); Playing = true; }
 
                 if (Cell.Name == CellType.Mine.ToString()) {
+                    Disable();
                     Playing = false;
                     DialogResult DR = MessageBox.Show("Would you like to try again?",
                                                       "You lost!",
                                                       MessageBoxButtons.YesNo);
-
                     if (DR == DialogResult.Yes) Create(Mines, FSize.Width, FSize.Height);
-                    else foreach (Label C in Cells) C.Enabled = false;
                 }
                 else {
                     FloodReveal(X, Y);
@@ -64,8 +63,32 @@ namespace Minesweeper {
         }
         #endregion
         #region Constructors
-        internal void Create(int Mines = 0, int X = 9, int Y = 9) {
-            #region Initialize
+        internal void Create(int mines = 0, int x = 9, int y = 9) {
+            Initialize(mines, x, y);
+
+            for (int Y = 0; Y < y; Y++) {
+                for (int X = 0; X < x; X++) {
+                    Cells[X, Y] = new Cell();
+                    Cells[X, Y].Location = new Point(x * Cells[X, Y].Width, Y * Cells[X, Y].Height);
+                    Cells[X, Y].Font = new Font("Arial", Cells[X, Y].Width / 2);
+                    Cells[X, Y].BorderStyle = BorderStyle.FixedSingle;
+                    Cells[X, Y].TextAlign = ContentAlignment.MiddleCenter;
+                    Cells[X, Y].BackColor = CellC;
+                    Cells[X, Y].Name = CellType.Cell.ToString();
+                    Cells[X, Y].Click += Cell_Click;
+                    Cells[X, Y].MouseDown += Cell_MouseDown;
+                    Controls.Add(Cells[X, Y]);
+                }
+            }
+
+            Resize();
+        }
+
+        /// <summary>
+        /// Resets all parameters of game
+        /// Also sets mines if wrong amount of mines is selected
+        /// </summary>
+        private void Initialize(int mines, int X, int Y) {
             if (Playing) {
                 DialogResult DR = MessageBox.Show("You will lose all progress in this game!",
                                               "You've already started a game!",
@@ -74,33 +97,21 @@ namespace Minesweeper {
             }
             if (Mines > X * Y - 9) { // Prevention of making more mines than cells
                 MessageBox.Show("So we did some magic and decided for you :)", "You tried to place too many mines!");
-                this.Mines = X * Y / 8;
-            } else this.Mines = Mines;
+                Mines = X * Y / 8;
+            } else Mines = mines;
 
             Controls.Clear();
+
             FSize = new Size(X, Y);
-            Playing = false;
-
             Cells = new Cell[X, Y];
-            #endregion
-            int Z = Math.Min(Parent.ClientSize.Width / X, Parent.ClientSize.Height / Y);
-            for (int y = 0; y < Y; y++) {
-                for (int x = 0; x < X; x++) {
-                    Cells[x, y] = new Cell();
-                    Cells[x, y].Location = new Point(x * Cells[x, y].Width, y * Cells[x, y].Height);
-                    Cells[x, y].Font = new Font("Arial", Cells[x, y].Width / 2);
-                    Cells[x, y].BorderStyle = BorderStyle.FixedSingle;
-                    Cells[x, y].TextAlign = ContentAlignment.MiddleCenter;
-                    Cells[x, y].BackColor = CellC;
-                    Cells[x, y].Name = CellType.Cell.ToString();
-                    Cells[x, y].Click += Cell_Click;
-                    Cells[x, y].MouseDown += Cell_MouseDown;
-                    Controls.Add(Cells[x, y]);
-                }
-            }
 
-            Resize();
+            Playing = false;
+            _PRight = true;
         }
+
+        /// <summary>
+        /// Calls the real create function from a difficulty
+        /// </summary>
         internal void Create(Difficulty D) {
             if (D == Difficulty.Easy) Create(10, 9, 9);
             else if (D == Difficulty.Medium) Create(40, 16, 16);
@@ -110,7 +121,6 @@ namespace Minesweeper {
         #endregion
 
         public Cell[,] Cells;
-
         private bool Playing;
 
         private int Mines;
@@ -256,17 +266,79 @@ namespace Minesweeper {
                 if (MCount <= Mines) {
                     if (Cell.BackColor == MineC) MCount++;
                     else if (Cell.Name == CellType.Cell.ToString()) return false;
-                } else return false;
+                }
+                else return false;
             }
-            foreach (Label C in Cells) C.Enabled = false;
+
+            Disable();
+
             Playing = false;
             DialogResult DR = MessageBox.Show("Would you like to try again?",
                                     "You won!",
                                     MessageBoxButtons.YesNo);
 
             if (DR == DialogResult.Yes) Create(Mines, FSize.Width, FSize.Height);
-            else foreach (Label C in Cells) C.Enabled = false;
             return true;
+        }
+
+        /// <summary>
+        /// Disables the entire field and displays it by 
+        /// setting the colors faded
+        /// also revokes all eventhandlers
+        /// </summary>
+        public void Disable() {
+            _PRight = false;
+
+            foreach (Label C in Cells) {
+                int[] clr = new int[] { C.ForeColor.R - 45,
+                                C.ForeColor.G - 45,
+                                C.ForeColor.B - 45
+                    };
+                for (int i = 0; i < clr.Length; i++) if (clr[i] < 0) clr[i] = 0;
+                C.ForeColor = Color.FromArgb(clr[0], clr[1], clr[2]);
+
+                C.Click -= Cell_Click;
+                C.MouseDown -= Cell_MouseDown;
+            }
+        }
+
+        /// <summary>
+        /// If you've got the right to pause/unpause
+        /// it will toggle between pause and unpaused
+        /// displays it by fading colors
+        /// </summary>
+        bool _PRight = true;
+        bool _Pause = false;
+        public void Pause() {
+            if (_PRight) {
+                _Pause = !_Pause;
+
+                foreach (Label C in Cells) {
+                    if (_Pause == true) {
+                        int[] clr = new int[] { C.ForeColor.R - 45,
+                                C.ForeColor.G - 45,
+                                C.ForeColor.B - 45
+                        };
+                        for (int i = 0; i < clr.Length; i++) if (clr[i] < 0) clr[i] = 0;
+                        C.ForeColor = Color.FromArgb(clr[0], clr[1], clr[2]);
+
+                        C.Click -= Cell_Click;
+                        C.MouseDown -= Cell_MouseDown;
+                    }
+                    else {
+                        int[] clr = new int[] {
+                        C.ForeColor.R + 45,
+                        C.ForeColor.G + 45,
+                        C.ForeColor.B + 45
+                        };
+                        for (int i = 0; i < clr.Length; i++) if (clr[i] > 255) clr[i] = 255;
+                        C.ForeColor = Color.FromArgb(clr[0], clr[1], clr[2]);
+
+                        C.Click += Cell_Click;
+                        C.MouseDown += Cell_MouseDown;
+                    }
+                }
+            }
         }
     }
 }
