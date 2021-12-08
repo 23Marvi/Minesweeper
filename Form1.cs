@@ -16,22 +16,31 @@ namespace Minesweeper {
 
         Field Field = new Field();
 
-        private void Form1_Load(object sender, EventArgs e) {
-            #region StartMessage
-            StringBuilder SB = new StringBuilder();
-            SB.Append("Press 'H' for a explanation on how Minesweeper works.");
-            SB.AppendLine();
-            SB.Append("Press 'P' to pause current game.");
-            SB.AppendLine();
-            SB.Append("Press 'R' to start a new game with same difficulty");
-            SB.AppendLine();
-            SB.Append("Press 'Esc' to choose a different difficulty.");
-            SB.AppendLine();
-            MessageBox.Show(SB.ToString(), "Welcome to Minesweeper!");
-            #endregion
+        /// <summary>
+        /// On startup
+        /// Show message and
+        /// draw first field
+        /// </summary>
+        bool _Ini = false;
+        private void Form1_Paint(object sender, PaintEventArgs e) {
+            if (_Ini == false) {
+                #region StartMessage
+                StringBuilder SB = new StringBuilder();
+                SB.Append("Press 'H' for a explanation on how Minesweeper works.");
+                SB.AppendLine();
+                SB.Append("Press 'P' to pause current game.");
+                SB.AppendLine();
+                SB.Append("Press 'R' to start a new game with same difficulty");
+                SB.AppendLine();
+                SB.Append("Press 'Esc' to choose a different difficulty.");
+                SB.AppendLine();
+                MessageBox.Show(SB.ToString(), "Welcome to Minesweeper!");
+                #endregion
 
-            Controls.Add(Field);
-            CreateField();
+                Controls.Add(Field);
+                CreateField();
+                _Ini = true;
+            }
         }
 
         /// <summary>
@@ -46,7 +55,7 @@ namespace Minesweeper {
         /// Resize the Field once the form has ended resizing
         /// </summary>
         private void Form1_ResizeEnd(object sender, EventArgs e) {
-            Field.Resize();
+            //Field.Resize();
         }
 
         /// <summary>
