@@ -55,7 +55,7 @@ namespace Minesweeper {
         /// Resize the Field once the form has ended resizing
         /// </summary>
         private void Form1_ResizeEnd(object sender, EventArgs e) {
-            //Field.Resize();
+            Field.Resize();
         }
 
         /// <summary>

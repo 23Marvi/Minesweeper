@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Drawing;
 using System.Windows.Forms;
 
 namespace Minesweeper {
@@ -13,7 +14,9 @@ namespace Minesweeper {
 
         public int SMine;
 
-        internal void Draw() {
+        public bool ShowNum { get; set; }
+
+        public void Update() {
             Graphics G = Parent.CreateGraphics();
             SolidBrush RB = new SolidBrush(BackColor);
             SolidBrush SB = new SolidBrush(ForeColor);
@@ -23,7 +26,11 @@ namespace Minesweeper {
             StringFormat SF = new StringFormat();
             SF.LineAlignment = StringAlignment.Center;
             SF.Alignment = StringAlignment.Center;
-            G.DrawString(SMine.ToString(), Font, SB, new Rectangle(Location, Size), SF);
+
+            if (ShowNum) {
+                if (SMine > 0) 
+                    G.DrawString(SMine.ToString(), Font, SB, new Rectangle(Location, Size), SF);
+            }
         }
     }
 }
