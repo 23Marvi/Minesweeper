@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -17,11 +18,6 @@ namespace Minesweeper {
     }
 
     internal class Field : Panel {
-        public Field() {
-            Click += Field_Click;
-            MouseDown += Field_MouseDown;
-        }
-
         #region Static
         private static Random RND = new Random();
         #endregion
@@ -37,6 +33,7 @@ namespace Minesweeper {
             int X = E.Location.X / (Cells[0, 0].Size.Width + 1);
             int Y = E.Location.Y / (Cells[0, 0].Size.Height + 1);
             Cell Cell = Cells[X, Y];
+
 
             if (E.Button == MouseButtons.Left && Cell.BackColor != MineC) {
                 if (!Playing) { SetMines(new Point(X, Y)); Playing = true; }
@@ -54,8 +51,6 @@ namespace Minesweeper {
                     Won();
                 }
             }
-
-            foreach (Cell C in Cells) C.Update();
         }
 
         /// <summary>
@@ -69,6 +64,7 @@ namespace Minesweeper {
 
             if (e.Button == MouseButtons.Right && Cell.Name != CellType.FCell.ToString()) {
                 Cell.BackColor = (Cell.BackColor == CellC) ? MineC : CellC;
+                Cell.Update();
             }
         }
         
@@ -76,6 +72,7 @@ namespace Minesweeper {
         #region Constructors
         internal void Create(int mines = 0, int x = 9, int y = 9) {
             Initialize(mines, x, y);
+
 
             int Z = Math.Min(Parent.ClientSize.Width / FSize.Width, Parent.ClientSize.Height / FSize.Height);
             Size = new Size(FSize.Width * Z + 10, FSize.Height * Z + 10);
@@ -87,13 +84,10 @@ namespace Minesweeper {
                 for (int X = 0; X < x; X++) {
                     Cells[X, Y] = new Cell();
                     Cells[X, Y].Parent = this;
+                    Cells[X, Y].Border = true;
                     Cells[X, Y].BackColor = Color.Gray;
                     Cells[X, Y].ForeColor = Color.DarkGreen;
                     Cells[X, Y].Name = CellType.Cell.ToString();
-                    
-                    //Cells[X, Y].BorderStyle = BorderStyle.FixedSingle;
-                    //Cells[X, Y].Click += Cell_Click;
-                    //Cells[X, Y].MouseDown += Cell_MouseDown;
                 }
             }
 
@@ -111,13 +105,16 @@ namespace Minesweeper {
                                                MessageBoxButtons.YesNo);
                 if (DR == DialogResult.No) return;
             }
-            if (Mines > X * Y - 9) { // Prevention of making more mines than cells
+            if (mines > X * Y - 9 || mines == 0) { // Prevention of making more mines than cells
                 MessageBox.Show("So we did some magic and decided for you :)", "You tried to place too many mines!");
                 Mines = X * Y / 8;
             } else Mines = mines;
 
             FSize = new Size(X, Y);
             Cells = new Cell[X, Y];
+
+            Click += Field_Click;
+            MouseDown += Field_MouseDown;
 
             Playing = false;
             _PRight = true;
@@ -153,7 +150,7 @@ namespace Minesweeper {
             G.Clear(Parent.BackColor);
 
             int Z = Math.Min(Parent.ClientSize.Width / FSize.Width, Parent.ClientSize.Height / FSize.Height);
-            Size = new Size(FSize.Width * Z + 10, FSize.Height * Z + 10);
+            Size = new Size(FSize.Width * Z, FSize.Height * Z);
             Location = new Point((Parent.ClientSize.Width - Width) / 2,
                                  (Parent.ClientSize.Height - Height) / 2);
 
@@ -167,7 +164,7 @@ namespace Minesweeper {
                         if (FontSize == 0) FontSize = 1;
                     }
 
-                    Cells[X, Y].Location = new Point(X * Cells[X, Y].Size.Width + 1 * X, Y * Cells[X, Y].Size.Height + 1 * Y);
+                    Cells[X, Y].Location = new Point(X * Cells[X, Y].Size.Width, Y * Cells[X, Y].Size.Height);
                     Cells[X, Y].Font = new Font("Arial", FontSize);
                     Cells[X, Y].Update();
                 }
@@ -183,18 +180,22 @@ namespace Minesweeper {
         /// Make it a mine
         /// Mine it's minecount = 0
         private void SetMines(Point ClickC) {
+            List<Point> Placed = new List<Point>();
             int _Mines = Mines;
             while (_Mines != 0) {
                 int x = RND.Next(FSize.Width);
                 int y = RND.Next(FSize.Height);
 
-                if (!CFunctions.AroundClick(ClickC, new Point(x, y))) {
-                    if (Cells[x, y].Name != CellType.Mine.ToString()) {
-                        Cells[x, y].Name = CellType.Mine.ToString();
-                        Cells[x, y].SMine = 0;
-                        SetNumbers(x, y);
+                if (!Placed.Contains(new Point(x, y))) {
+                    if (!CFunctions.AroundClick(ClickC, new Point(x, y))) {
+                        if (Cells[x, y].Name != CellType.Mine.ToString()) {
+                            Cells[x, y].Name = CellType.Mine.ToString();
+                            Cells[x, y].SMine = 0;
+                            SetNumbers(x, y);
 
-                        _Mines--;
+                            _Mines--;
+                            Placed.Add(new Point(x, y));
+                        }
                     }
                 }
             }
@@ -250,9 +251,10 @@ namespace Minesweeper {
 
             else if (Cells[x, y].Name == CellType.Cell.ToString() && Cells[x, y].BackColor != MineC) {
                 Cells[x, y].BackColor = FCellC;
-                //Cells[x, y].BorderStyle = BorderStyle.None;
+                Cells[x, y].Border = false;
                 Cells[x, y].Name = CellType.FCell.ToString();
                 Cells[x, y].ShowNum = true;
+                Cells[x, y].Update();
 
                 if (Cells[x, y].SMine == 0) {
                     for (int Y = y - 1; Y < y + 2; Y++) {
@@ -300,6 +302,9 @@ namespace Minesweeper {
         public void Disable() {
             _PRight = false;
 
+            Click -= Field_Click;
+            MouseDown -= Field_MouseDown;
+
             foreach (Cell C in Cells) {
                 int[] clr = new int[] { C.ForeColor.R - 45,
                                 C.ForeColor.G - 45,
@@ -307,9 +312,6 @@ namespace Minesweeper {
                     };
                 for (int i = 0; i < clr.Length; i++) if (clr[i] < 0) clr[i] = 0;
                 C.ForeColor = Color.FromArgb(clr[0], clr[1], clr[2]);
-
-                //C.Click -= Cell_Click;
-                //C.MouseDown -= Cell_MouseDown;
             }
         }
 

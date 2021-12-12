@@ -38,7 +38,9 @@ namespace Minesweeper {
                 #endregion
 
                 Controls.Add(Field);
-                CreateField();
+                Field.Create(0, 80, 80);
+                
+                //CreateField();
                 _Ini = true;
             }
         }
