@@ -38,9 +38,9 @@ namespace Minesweeper {
                 #endregion
 
                 Controls.Add(Field);
-                Field.Create(0, 80, 80);
+                //Field.Create(9000, 300, 300);
                 
-                //CreateField();
+                CreateField();
                 _Ini = true;
             }
         }
@@ -67,7 +67,7 @@ namespace Minesweeper {
         /// Esc for Settings
         /// H for help
         private void Form1_KeyDown(object sender, KeyEventArgs e) {
-            if (e.KeyCode == Keys.R) CreateField();
+            if (e.KeyCode == Keys.R) Field.Create();
             if (e.KeyCode == Keys.Escape) {
                 SettingsMenu.Visible = (SettingsMenu.Visible) ? false : true;
                 SettingsMenu.Location = new Point((ClientSize.Width - SettingsMenu.Width) / 2,
@@ -90,5 +90,6 @@ namespace Minesweeper {
             }
             if (e.KeyCode == Keys.P) Field.Pause();
         }
+
     }
 }

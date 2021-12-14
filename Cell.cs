@@ -15,23 +15,30 @@ namespace Minesweeper {
         public int SMine;
 
         public bool ShowNum;
-        public bool Border;
+
+
+        public bool Border = true;
 
         public void Update() {
             Graphics G = Parent.CreateGraphics();
             SolidBrush RB = new SolidBrush(BackColor);
             SolidBrush SB = new SolidBrush(ForeColor);
 
-            G.FillRectangle(RB, new Rectangle(Location, Size));
+            
 
+            Pen PPen = new Pen(Parent.BackColor);
             if (Border) {
-                Pen PPen = new Pen(Parent.BackColor);
+                Point BLoc = new Point(Location.X + 1, Location.Y + 1);
+                Size BSize = new Size(Size.Width - 2, Size.Height - 2);
+                G.FillRectangle(RB, new Rectangle(BLoc, BSize));
+            } else G.FillRectangle(RB, new Rectangle(Location, Size));
 
-                Point NL = new Point(Location.X + 1, Location.Y + 1);
-                Size NS = new Size(Size.Width - 1, Size.Height - 1);
 
-                G.DrawRectangle(PPen, new Rectangle(NL, NS));
-            }
+            int FontSize = Size.Width / 2;
+            if (FontSize <= 0) FontSize = 1;
+            Font = new Font("Arial", FontSize);
+
+
 
             StringFormat SF = new StringFormat();
             SF.LineAlignment = StringAlignment.Center;
