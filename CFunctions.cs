@@ -14,5 +14,13 @@ namespace Minesweeper {
                 }
             } return false;
         }
+
+        public static bool WithinBounds(Rectangle A, Rectangle B) {
+            if (A.Location.X + A.Size.Width >= B.X && A.Location.X <= B.Location.X + B.Width) {
+                if (A.Location.Y + A.Size.Height >= B.Y && A.Location.Y <= B.Location.Y + B.Height) {
+                    return true;
+                }
+            } return false;
+        }
     }
 }

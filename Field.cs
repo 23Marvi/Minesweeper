@@ -17,65 +17,59 @@ namespace Minesweeper {
         Extreme
     }
 
-    internal class Field : Panel {
+    public class Field : Panel {
         public Field() {
             MouseWheel += Field_MouseWheel;
         }
 
-        int PSize;
+        int XOff = 0;
+        int YOff = 0;
+
         private void Field_MouseWheel(object sender, MouseEventArgs e) {
-            Graphics G = CreateGraphics();
-            G.Clear(BackColor);
-            PSize = Cells[0, 0].Size.Width;
-            if (e.Delta >= 0) PSize++;
-            if (e.Delta <= 0) PSize--;
+            if (!_Pause) {
+                int PSize = Cells[0, 0].Size.Width;
+                if (e.Delta >= 0) PSize++;
+                if (e.Delta <= 0) {
+                    if (CArrSize.X * PSize != Width) PSize--;
+                    else return;
+                }
 
-            if (e.X < Width / 2) {
-                if (e.Y < Width / 2) {  // TopLeft
-                    for (int y = 0; y < FSize.Height; y++) {
-                        for (int x = 0; x < FSize.Width; x++) {
-                            Cells[x, y].Size = new Size(PSize, PSize);
-                            Cells[x, y].Location = new Point(Cells[x, y].Size.Width * x, Cells[x, y].Size.Height * y);
-                        }
+                Graphics G = CreateGraphics();
+                G.Clear(BackColor);
+
+                foreach (Cell c in Cells) c.Size = new Size(PSize, PSize);
+
+                if (e.Delta >= 0) {
+                    if (e.X <= Size.Width / 2) {
+                        if (e.Y > Size.Height / 2) YOff -= CArrSize.Y;
+                    }
+                    if (e.X > Size.Width / 2) {
+                        if (e.Y > Size.Height / 2) YOff -= CArrSize.Y;
+                        XOff -= CArrSize.X;
                     }
                 }
-                else {                  // BottomLeft
-                    for (int y = 0; y < FSize.Height; y++) {
-                        for (int x = 0; x < FSize.Width; x++) {
-                            int ZY = FSize.Height - y;
-
-                            Cells[x, y].Size = new Size(PSize, PSize);
-                            Cells[x, y].Location = new Point(Cells[x, y].Size.Width * x, Height - Cells[x, y].Size.Height * ZY);
-                        }
-                    }
+                if (e.Delta <= 0) {
+                    if (XOff != 0) XOff += CArrSize.X;
+                    if (YOff != 0) YOff += CArrSize.Y;
                 }
-            }
-            else {                      // TopRight
-                if (e.Y < Width / 2) {
-                    for (int y = 0; y < FSize.Height; y++) {
-                        for (int x = 0; x < FSize.Width; x++) {
-                            int ZX = FSize.Width - x;
 
-                            Cells[x, y].Size = new Size(PSize, PSize);
-                            Cells[x, y].Location = new Point(Width - Cells[x, y].Size.Width * ZX, Cells[x, y].Size.Height * y);
-                        }
-                    }
-                }
-                else {                  // BottomRight
-                    for (int y = 0; y < FSize.Height; y++) {
-                        for (int x = 0; x < FSize.Width; x++) {
-                            int ZX = FSize.Width - x;
-                            int ZY = FSize.Height - y;
+                for (int y = 0; y < CArrSize.Y; y++) {
+                    for (int x = 0; x < CArrSize.X; x++) {
+                        Cell C = Cells[x, y];
 
-                            Cells[x, y].Size = new Size(PSize, PSize);
-                            Cells[x, y].Location = new Point(Width - Cells[x, y].Size.Width * ZX, Height - Cells[x, y].Size.Height * ZY);
+                        C.Location = new Point(C.Size.Width * x + XOff, C.Size.Height * y + YOff);
+
+                        if (C.Location.X < Width && C.Location.X + C.Size.Width > 0) {
+                            if (C.Location.Y < Height && C.Location.Y + C.Size.Height > 0) {
+                                Cells[x, y].Update();
+                            }
                         }
                     }
                 }
             }
-
-            foreach (Cell i in Cells) i.Update();
         }
+
+
 
         #region Static
         private static Random RND = new Random();
@@ -89,60 +83,50 @@ namespace Minesweeper {
         /// Else, reveal cells
         private void Field_Click(object sender, EventArgs e) {
             MouseEventArgs E = (MouseEventArgs)e;
-            int X = E.Location.X / (Cells[0, 0].Size.Width);
-            int Y = E.Location.Y / (Cells[0, 0].Size.Height);
+            Point P = PointToClient(Cursor.Position);
+            int X = (P.X - Cells[0, 0].Location.X) / Cells[0, 0].Size.Width;
+            int Y = (P.Y - Cells[0, 0].Location.Y) / Cells[0, 0].Size.Height;
+            Cell Cell = Cells[X, Y];
 
-            int x = Cells.GetLength(0) - 1;
-            int y = Cells.GetLength(1) - 1;
+            if (E.Button == MouseButtons.Left && Cell.BackColor != MineC) {
+                if (!Playing) { SetMines(new Point(X, Y)); Playing = true; }
 
-            if (X <= x && Y <= y && X >= 0 && Y >= 0) {
-                Cell Cell = Cells[X, Y];
-
-                if (E.Button == MouseButtons.Left && Cell.BackColor != MineC) {
-                    if (!Playing) { SetMines(new Point(X, Y)); Playing = true; }
-
-                    if (Cell.Name == CellType.Mine.ToString()) {
-                        Disable();
-                        Playing = false;
-                        DialogResult DR = MessageBox.Show("Would you like to try again?",
-                                                          "You lost!",
-                                                          MessageBoxButtons.YesNo);
-                        if (DR == DialogResult.Yes) Create(Mines, FSize.Width, FSize.Height);
-                        return;
-                    }
-                    else {
-                        FloodReveal(X, Y);
-                        Won();
-                    }
+                if (Cell.Type == CellType.Mine) {
+                    Disable();
+                    Playing = false;
+                    DialogResult DR = MessageBox.Show("Would you like to try again?",
+                                                        "You lost!",
+                                                        MessageBoxButtons.YesNo);
+                    if (DR == DialogResult.Yes) Create(Mines, CArrSize.X, CArrSize.Y);
+                    return;
+                }
+                else {
+                    FloodReveal(X, Y);
+                    Won();
                 }
             }
         }
 
-        /// <summary>
-        /// Click for quick responses
-        /// </summary>
+        /// Fast click for flagging ///
         private void Field_MouseDown(object sender, MouseEventArgs e) {
-            MouseEventArgs E = (MouseEventArgs)e;
-            int X = E.Location.X / (Cells[0, 0].Size.Width);
-            int Y = E.Location.Y / (Cells[0, 0].Size.Height);
-            int x = Cells.GetLength(0) - 1;
-            int y = Cells.GetLength(1) - 1;
+            Point P = PointToClient(Cursor.Position);
+            int X = (P.X - Cells[0, 0].Location.X) / Cells[0, 0].Size.Width;
+            int Y = (P.Y - Cells[0, 0].Location.Y) / Cells[0, 0].Size.Height;
+            Cell Cell = Cells[X, Y];
 
-            if (X <= x && Y <= y && X >= 0 && Y >= 0) {
-                Cell Cell = Cells[X, Y];
-
-                if (e.Button == MouseButtons.Right && Cell.Name != CellType.FCell.ToString()) {
+            if (e.Button == MouseButtons.Right) {
+                if (Cell.Type != CellType.FCell) {
                     Cell.BackColor = (Cell.BackColor == CellC) ? MineC : CellC;
                     Cell.Update();
-                    return;
                 }
             }
         }
 
         #endregion
         #region Constructors
+        /// Creates a Field with the properties it already has ///
         internal void Create() {
-            Create(Mines, FSize.Width, FSize.Height);
+            Create(Mines, CArrSize.X, CArrSize.Y);
         }
 
         /// <summary>
@@ -153,14 +137,25 @@ namespace Minesweeper {
         internal void Create(int mines, int x, int y) {
             Initialize();
 
-            if (mines == Mines && x == FSize.Width && y == FSize.Height) {
+            if (mines == Mines && x == CArrSize.X && y == CArrSize.Y) {
                 for (int Y = 0; Y < y; Y++) {
                     for (int X = 0; X < x; X++) {
-                        Cells[X, Y].BackColor = Color.Gray;
-                        Cells[X, Y].Name = CellType.Cell.ToString();
+                        bool Change = false;
+                        if (Cells[X, Y].BackColor != CellC) {
+                            Cells[X, Y].BackColor = Parent.BackColor;
+                            Cells[X, Y].ForeColor = Parent.BackColor;
+                            Cells[X, Y].Update();
+
+                            Change = true;
+                        }
+
+                        Cells[X, Y].BackColor = CellC;
+                        Cells[X, Y].Type = CellType.Cell;
                         Cells[X, Y].SMine = 0;
                         Cells[X, Y].ShowNum = false;
                         Cells[X, Y].Border = true;
+
+                        if (Change) Cells[X, Y].Update();
                     }
                 }
             }
@@ -170,18 +165,17 @@ namespace Minesweeper {
                     for (int X = 0; X < x; X++) {
                         Cells[X, Y] = new Cell();
                         Cells[X, Y].Parent = this;
-                        Cells[X, Y].BackColor = Color.Gray;
-                        Cells[X, Y].ForeColor = Color.DarkGreen;
-                        Cells[X, Y].Name = CellType.Cell.ToString();
+                        Cells[X, Y].BackColor = CellC;
+                        Cells[X, Y].Type = CellType.Cell;
                     }
                 }
-            }
 
-            int Z = Math.Min(Parent.ClientSize.Width / FSize.Width, Parent.ClientSize.Height / FSize.Height);
-            Size = new Size(FSize.Width * Z + 10, FSize.Height * Z + 10);
-            Location = new Point((Parent.ClientSize.Width - Width) / 2,
-                                 (Parent.ClientSize.Height - Height) / 2);
-            Resize();
+                int Z = Math.Min(Parent.ClientSize.Width / CArrSize.X, Parent.ClientSize.Height / CArrSize.Y);
+                Size = new Size(CArrSize.X * Z, CArrSize.Y * Z);
+                Location = new Point((Parent.ClientSize.Width - Width) / 2,
+                                     (Parent.ClientSize.Height - Height) / 2);
+                Resize();
+            }
         }
 
         /// <summary>
@@ -192,13 +186,13 @@ namespace Minesweeper {
             if (mines > X * Y - 9) {
                 MessageBox.Show("So we did some magic and decided for you :)", "You tried to place too many mines!");
                 Mines = X * Y / 8;
-            } 
+            }
             else if (mines < X * Y / 100 * 10) {
                 MessageBox.Show("So we did some magic and decided for you :)", "You tried to place underneath the minimum amount of mines!");
                 Mines = X * Y / 8;
             } else Mines = mines;
 
-            FSize = new Size(X, Y);
+            CArrSize = new Point(X, Y);
             Cells = new Cell[X, Y];
         }
 
@@ -221,6 +215,8 @@ namespace Minesweeper {
             Playing = false;
             _PRight = true;
             _Pause = false;
+
+            XOff = YOff = 0;
         }
 
         /// <summary>
@@ -244,7 +240,7 @@ namespace Minesweeper {
         private bool Playing;
 
         private int Mines;
-        public Size FSize;
+        public Point CArrSize;
 
         public Color FCellC = Color.DarkGray;
         public Color CellC = Color.Gray;
@@ -258,13 +254,13 @@ namespace Minesweeper {
             Graphics G = CreateGraphics();
             G.Clear(Parent.BackColor);
 
-            int Z = Math.Min(Parent.ClientSize.Width / FSize.Width, Parent.ClientSize.Height / FSize.Height);
-            Size = new Size(FSize.Width * Z, FSize.Height * Z);
+            int Z = Math.Min(Parent.ClientSize.Width / CArrSize.X, Parent.ClientSize.Height / CArrSize.Y);
+            Size = new Size(CArrSize.X * Z, CArrSize.Y * Z);
             Location = new Point((Parent.ClientSize.Width - Width) / 2,
                                  (Parent.ClientSize.Height - Height) / 2);
 
-            for (int Y = 0; Y < FSize.Height; Y++) {
-                for (int X = 0; X < FSize.Width; X++) {
+            for (int Y = 0; Y < CArrSize.Y; Y++) {
+                for (int X = 0; X < CArrSize.X; X++) {
                     Cells[X, Y].Size = new Size(Z, Z);
                     Cells[X, Y].Location = new Point(X * Cells[X, Y].Size.Width, Y * Cells[X, Y].Size.Height);
                     Cells[X, Y].Update();
@@ -281,26 +277,25 @@ namespace Minesweeper {
         /// Make it a mine
         /// Mine it's minecount = 0
         private void SetMines(Point ClickC) {
-            List<Point> Placed = new List<Point>();
             int _Mines = Mines;
             while (_Mines != 0) {
-                int x = RND.Next(FSize.Width);
-                int y = RND.Next(FSize.Height);
+                int x = RND.Next(CArrSize.X);
+                int y = RND.Next(CArrSize.Y);
 
-                if (!Placed.Contains(new Point(x, y))) {
-                    if (!CFunctions.AroundClick(ClickC, new Point(x, y))) {
-                        if (Cells[x, y].Name != CellType.Mine.ToString()) {
-                            Cells[x, y].Name = CellType.Mine.ToString();
-                            Cells[x, y].SMine = 0;
-                            SetNumbers(x, y);
+                if (!CFunctions.AroundClick(ClickC, new Point(x, y))) {
+                    if (Cells[x, y].Type != CellType.Mine) {
 
-                            _Mines--;
-                            Placed.Add(new Point(x, y));
-                        }
+                        Cells[x, y].Type = CellType.Mine;
+                        Cells[x, y].SMine = 0;
+                        SetNumbers(x, y);
+                        _Mines--;
                     }
                 }
             }
+
+            SetColors();
         }
+
         /// <summary>
         /// Increases the minecount of surrounding cells
         /// if it's not a mine
@@ -310,15 +305,15 @@ namespace Minesweeper {
         private void SetNumbers(int x, int y) {
             for (int Y = y - 1; Y < y + 2; Y++) {
                 for (int X = x - 1; X < x + 2; X++) {
-                    try {
-                        if (Cells[X, Y].Name != CellType.Mine.ToString()) Cells[X, Y].SMine++;
+                    if (Y >= 0 && Y <= CArrSize.Y - 1) {
+                        if (X >= 0 && X <= CArrSize.X - 1) {
+                            if (Cells[X, Y].Type != CellType.Mine) Cells[X, Y].SMine++;
+                        }
                     }
-                    catch (Exception) { }
                 }
             }
-
-            SetColors();
         }
+
         Color[] clrs = new Color[] {
             Color.Blue,
             Color.Green,
@@ -344,13 +339,12 @@ namespace Minesweeper {
         /// If it's MineC is not zero, display it's number
         /// Else, keep floodfilling
         private void FloodReveal(int x, int y) {
-            if ((x < 0) || (x >= FSize.Width)) return;
-            else if ((y < 0) || (y >= FSize.Height)) return;
+            if (x < 0 || x >= CArrSize.X || y < 0 || y >= CArrSize.Y) return;
 
-            else if (Cells[x, y].Name == CellType.Cell.ToString() && Cells[x, y].BackColor != MineC) {
+            if (Cells[x, y].Type == CellType.Cell && Cells[x, y].BackColor != MineC) {
                 Cells[x, y].BackColor = FCellC;
                 Cells[x, y].Border = false;
-                Cells[x, y].Name = CellType.FCell.ToString();
+                Cells[x, y].Type = CellType.FCell;
                 Cells[x, y].ShowNum = true;
                 Cells[x, y].Update();
 
@@ -376,9 +370,8 @@ namespace Minesweeper {
             foreach (Cell Cell in Cells) {
                 if (MCount <= Mines) {
                     if (Cell.BackColor == MineC) MCount++;
-                    else if (Cell.Name == CellType.Cell.ToString()) return false;
-                }
-                else return false;
+                    else if (Cell.Type == CellType.Cell) return false;
+                } else return false;
             }
 
             Disable();
@@ -388,7 +381,7 @@ namespace Minesweeper {
                                     "You won!",
                                     MessageBoxButtons.YesNo);
 
-            if (DR == DialogResult.Yes) Create(Mines, FSize.Width, FSize.Height);
+            if (DR == DialogResult.Yes) Create();
             return true;
         }
 
@@ -397,7 +390,7 @@ namespace Minesweeper {
         /// setting the colors faded
         /// also revokes all eventhandlers
         /// </summary>
-        public void Disable() {
+        private void Disable() {
             Pause();
             _PRight = false;
         }
@@ -446,6 +439,24 @@ namespace Minesweeper {
 
                             C.Update();
                         }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Redraws part of the Cells whenever something "deleted" it
+        /// by being on top of it
+        /// </summary>
+        /// Picks the cells of which their Location is within the Location
+        /// of other control
+        public void Redraw(Rectangle R) {
+            if (Cells != null) {
+                for (int y = 0; y < CArrSize.Y; y++) {
+                    for (int x = 0; x < CArrSize.X; x++) {
+                        Cell i = Cells[x, y];
+                        Rectangle C = new Rectangle(new Point(Location.X + i.Location.X, Location.Y + i.Location.Y), i.Size);
+                        if (CFunctions.WithinBounds(C, R)) i.Update();
                     }
                 }
             }

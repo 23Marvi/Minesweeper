@@ -3,12 +3,12 @@ using System.Drawing;
 using System.Windows.Forms;
 
 namespace Minesweeper {
-    class Cell {
+    public class Cell {
         public Size Size;
         public Point Location;
         public Color BackColor;
         public Color ForeColor;
-        public string Name;
+        public CellType Type;
         public Control Parent;
         public Font Font;
 
@@ -27,6 +27,7 @@ namespace Minesweeper {
             
 
             Pen PPen = new Pen(Parent.BackColor);
+
             if (Border) {
                 Point BLoc = new Point(Location.X + 1, Location.Y + 1);
                 Size BSize = new Size(Size.Width - 2, Size.Height - 2);

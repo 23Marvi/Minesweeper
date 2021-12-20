@@ -30,7 +30,7 @@ namespace Minesweeper {
             // SettingsMenu
             // 
             this.SettingsMenu.BackColor = System.Drawing.SystemColors.Control;
-            this.SettingsMenu.Location = new System.Drawing.Point(491, 108);
+            this.SettingsMenu.Location = new System.Drawing.Point(12, 12);
             this.SettingsMenu.Name = "SettingsMenu";
             this.SettingsMenu.Size = new System.Drawing.Size(420, 600);
             this.SettingsMenu.TabIndex = 1;

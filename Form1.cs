@@ -14,7 +14,7 @@ namespace Minesweeper {
             InitializeComponent();
         }
 
-        Field Field = new Field();
+        public Field Field = new Field();
 
         /// <summary>
         /// On startup
@@ -36,42 +36,32 @@ namespace Minesweeper {
                 SB.AppendLine();
                 MessageBox.Show(SB.ToString(), "Welcome to Minesweeper!");
                 #endregion
+                _Ini = true;
 
                 Controls.Add(Field);
-                //Field.Create(9000, 300, 300);
-                
+                SettingsMenu.ToggleVisible(2);
                 CreateField();
-                _Ini = true;
             }
         }
 
-        /// <summary>
-        /// Open function to Create a field from Difficulty
-        /// </summary>
+        /// Open function to Create a field from Difficulty ///
         public void CreateField() {
             if (Enum.TryParse(SettingsMenu.Difficulty, out Difficulty D)) Field.Create(D);
             else Field.Create();
         }
 
-        /// <summary>
-        /// Resize the Field once the form has ended resizing
-        /// </summary>
+        /// Resizes controls within Form after resizing ///
         private void Form1_ResizeEnd(object sender, EventArgs e) {
+            SettingsMenu.Center();
             Field.Resize();
         }
 
-        /// <summary>
-        /// Hotkeys for ingame settings
-        /// </summary>
-        /// R to Restart game
-        /// Esc for Settings
-        /// H for help
+        /// Hotkeys for ingame settings ///
         private void Form1_KeyDown(object sender, KeyEventArgs e) {
             if (e.KeyCode == Keys.R) Field.Create();
             if (e.KeyCode == Keys.Escape) {
-                SettingsMenu.Visible = (SettingsMenu.Visible) ? false : true;
-                SettingsMenu.Location = new Point((ClientSize.Width - SettingsMenu.Width) / 2,
-                                                  (ClientSize.Height - SettingsMenu.Height) / 2);
+                SettingsMenu.ToggleVisible();
+                Field.Pause();
             }
             if (e.KeyCode == Keys.H) {
                 StringBuilder SB = new StringBuilder();
@@ -90,6 +80,5 @@ namespace Minesweeper {
             }
             if (e.KeyCode == Keys.P) Field.Pause();
         }
-
     }
 }
